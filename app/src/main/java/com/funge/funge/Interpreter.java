@@ -81,20 +81,24 @@ public class Interpreter{
     // 辅助函数
     public void clear() {
         currentLevel.toKeyList(); // 重置关卡
-        restart(); // 重置指针
+        ips.clear();
+        loadIP(currentLevel.ip); // 重置指针
         List<XYZ> placedKeys = new ArrayList<>(this.code.keySet());
-        for (XYZ xyz : placedKeys) { // 指令全回收以重置键盘
-            recover(this.code.remove(xyz));
-        }
-        code.clear(); // 清理代码
-        //keyList = new ArrayList<>(currentLevel.keyList);
-        callback.onCommandPlaced(keyList, -1);
+        for (XYZ xyz : placedKeys) {
+            recover(code.remove(xyz));
+        } // 回收所有指令以重置键盘
     }
 
     public void restart() {
         ips.clear();
-        loadIP(currentLevel.ip);
+        loadIP(currentLevel.ip); // 重置指针
         obstacle = new HashMap<>(stringToCode(currentLevel.map));
+        List<XYZ> placedKeys = new ArrayList<>(this.code.keySet());
+        for (XYZ xyz : placedKeys) { // 回收被障碍物占据的指令
+            if (this.obstacle.containsKey(xyz)) {
+                recover(code.remove(xyz));
+            }
+        }
     }
 
     public Map<XYZ, Character> stringToCode(String[] codeString) {
