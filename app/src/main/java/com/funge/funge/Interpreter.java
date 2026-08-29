@@ -92,7 +92,7 @@ public class Interpreter{
     public void restart() {
         ips.clear();
         loadIP(currentLevel.ip); // 重置指针
-        obstacle = new HashMap<>(stringToCode(currentLevel.map));
+        obstacle = new HashMap<>(stringToCode(currentLevel.map)); // 重置障碍物
         List<XYZ> placedKeys = new ArrayList<>(this.code.keySet());
         for (XYZ xyz : placedKeys) { // 回收被障碍物占据的指令
             if (this.obstacle.containsKey(xyz)) {
