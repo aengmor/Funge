@@ -10,6 +10,7 @@ import java.util.*;
 
 public class Funge extends AppCompatActivity {
 	private Paints board = null; // 游戏板
+	private Interpreter interpreter = new Interpreter();
     private TextView stackOutput = null; // 栈显示
     private TextView IPoutput = null; // 指针
     private Button executeButton = null; // 执行按钮
@@ -44,7 +45,8 @@ public class Funge extends AppCompatActivity {
 			
 		// 传给该页面的Paints
 		board = findViewById(R.id.board);
-		board.setLevel(currentLevel);
+		board.setInterpreter(interpreter);
+		interpreter.setLevel(currentLevel);
 		
 		// 键盘界面
         RecyclerView keyboardView = findViewById(R.id.keys);
@@ -176,7 +178,7 @@ public class Funge extends AppCompatActivity {
     }
 	
 	public void restart(View view) {
-		board.restart();
+		interpreter.restart();
 		stackOutput.setText("Restart");
 		isRunning = false;
 		handler.removeCallbacks(repeatExecute);
@@ -184,19 +186,34 @@ public class Funge extends AppCompatActivity {
 	}
 
     public void clear(View view) {
-        board.clear();
+        interpreter.clear();
         stackOutput.setText("Clear");
 		isRunning = false;
 		handler.removeCallbacks(repeatExecute);
         IPoutput.setText("0,0");
     }
 
-    public void execute() {
-        result = board.tick();
-        IPoutput.setText(result);
-        String stack = board.getStack();  
-        stackOutput.setText(stack);
-    }
+	public void execute() {
+		Interpreter.Status status = interpreter.tick();
+		IP cip = interpreter.getCip(); // 需要在 Engine 暴露刚执行完的 cip
+
+		if (cip != null) {
+			IPoutput.setText(cip.uid + ":" + cip.x + "," + cip.y);
+		}
+		stackOutput.setText(interpreter.getStack());
+		board.invalidate(); // 触发重绘
+
+		// 根据引擎返回的状态处理弹窗
+		if (status == Interpreter.Status.CLEAR) {
+			Toast.makeText(this, "程序执行完毕", Toast.LENGTH_SHORT).show();
+			isRunning = false;
+			handler.removeCallbacks(run);
+		} else if (status == Interpreter.Status.FAILED) {
+			Toast.makeText(this, getString(R.string.game_failed), Toast.LENGTH_SHORT).show();
+			isRunning = false;
+			handler.removeCallbacks(run);
+		}
+	}
 	
 	public void run(View view) {
 		if (!isRunning) {
