@@ -126,7 +126,7 @@ public class SpecialKeyboardAdapter extends RecyclerView.Adapter<SpecialKeyboard
 	@NonNull
 	@Override
 	public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-		// 根据keyboard.xml创建并缓存ViewHolder，供onBindVuewHolder取用
+		// 根据keyboard.xml创建并缓存ViewHolder，供onBindViewHolder取用
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.special_key, parent, false);
         return new ViewHolder(view);
     }

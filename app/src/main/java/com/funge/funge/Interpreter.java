@@ -31,7 +31,7 @@ public class Interpreter{
     private IP cloneIP = null; // t指令分裂出的ip
     private int nextuid = 0;
 
-    // 回调
+    // 回调接口
     public interface Callback {
         void onCommandPlaced(List<Key> keyList, int pos);
 
@@ -80,18 +80,21 @@ public class Interpreter{
 
     // 辅助函数
     public void clear() {
-        code.clear(); // 清理代码
         currentLevel.toKeyList(); // 重置关卡
         restart(); // 重置指针
-        keyList = new ArrayList<>(currentLevel.keyList); // 重置键盘
+        List<XYZ> placedKeys = new ArrayList<>(this.code.keySet());
+        for (XYZ xyz : placedKeys) { // 指令全回收以重置键盘
+            recover(this.code.remove(xyz));
+        }
+        code.clear(); // 清理代码
+        //keyList = new ArrayList<>(currentLevel.keyList);
         callback.onCommandPlaced(keyList, -1);
     }
 
     public void restart() {
         ips.clear();
         loadIP(currentLevel.ip);
-        obstacle = new HashMap<>();
-        obstacle = stringToCode(currentLevel.map);
+        obstacle = new HashMap<>(stringToCode(currentLevel.map));
     }
 
     public Map<XYZ, Character> stringToCode(String[] codeString) {
@@ -153,7 +156,6 @@ public class Interpreter{
 
         // 监听器响应变化
         callback.onCommandPlaced(keyList, pos);
-
     }
 
     // 收回被替换的指令
@@ -193,6 +195,9 @@ public class Interpreter{
 
     // 辅助函数，由字符找按键
     public int alter(char c) {
+        if (keyList == null) {
+            return -1;
+        }
         for (int pos = 0; pos < keyList.size(); pos++) {
             Key key = keyList.get(pos);
             if (key.in(c)) {
@@ -424,12 +429,6 @@ public class Interpreter{
                         retreat();
                 break;
             }
-            //			case ';' : {
-            //				move();
-            //				while (getCommand(cip.x, cip.y) != ';')
-            //					move();
-            //				break;
-            //			}
 
             // 杂项
             case '@' :

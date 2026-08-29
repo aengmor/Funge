@@ -28,7 +28,6 @@ public class Paints extends View { // 负责绘制游戏板的类
 	private List<Key> keyList = new ArrayList<>(); // 按键表，用于修改按键数
 
 	private List<IP> ips = new ArrayList<>(); // 指针列表
-	private int nextuid = 0;
 
 	// 触控辅助
 	private float downX, downY;
@@ -61,12 +60,6 @@ public class Paints extends View { // 负责绘制游戏板的类
 		obstaclePaint.setTextSize(SIZE);
 		requestLayout();
 		invalidate();
-	}
-
-	public void loadIP(int[][] xys) {
-		for (int[] xy : xys) {
-			ips.add(new IP(nextuid++, xy[0], xy[1], 1, 0));
-		}
 	}
 
 	public void init() {
@@ -179,18 +172,6 @@ public class Paints extends View { // 负责绘制游戏板的类
 	// 取得所按指令
 	public void getCommandInput(String c) {
 		this.command = c.charAt(0);
-	}
-
-
-	// 辅助函数，由字符找按键
-	public int alter(char c) {
-		for (int pos = 0; pos < keyList.size(); pos++) {
-			Key key = keyList.get(pos);
-			if (key.in(c)) {
-				return pos;
-			}
-		}
-		return -1;
 	}
 }
 

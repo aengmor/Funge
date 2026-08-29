@@ -1,4 +1,5 @@
 package com.funge.funge;
+import android.annotation.SuppressLint;
 import android.content.*;
 import android.os.*;
 import android.view.*;
@@ -27,7 +28,8 @@ public class Funge extends AppCompatActivity {
 	private boolean isRunning = false;
 	private int RUNSPEED = 50;
 	
-	@Override
+	@SuppressLint("ClickableViewAccessibility")
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_funge);
@@ -36,23 +38,10 @@ public class Funge extends AppCompatActivity {
 		LevelData currentLevel = (LevelData) getIntent().getSerializableExtra("current_level");
 		keyList = currentLevel.keyList;
 
-		// 传给该页面的Paints
+		// 传给该页面的Interpreter和Paints
 		board = findViewById(R.id.board);
-		board.setInterpreter(interpreter);
 		interpreter.setLevel(currentLevel);
-
-		interpreter.setCallback(new Interpreter.Callback() {
-			@Override
-			public void onCommandPlaced(List<Key> keyList, int pos) {
-				keyboardAdapter.getKeyList(keyList);
-				keyboardAdapter.updateCommandCount(pos);
-			}
-
-			@Override
-			public void onError(String msg) {
-				Toast.makeText(Funge.this, msg, Toast.LENGTH_SHORT).show();
-			}
-		});
+		board.setInterpreter(interpreter);
 
 		// 标题栏
 		ActionBar actionBar = getSupportActionBar();
@@ -66,40 +55,46 @@ public class Funge extends AppCompatActivity {
         keyboardView.setLayoutManager(new GridLayoutManager(this, 3, GridLayoutManager.HORIZONTAL, false));
 		
 		// 点击按键的监听器
-		keyboardAdapter = new SpecialKeyboardAdapter(this, keyList, new SpecialKeyboardAdapter.OnItemClickListener() {
-				// 调取keyboardAdapter，传入keyList和触控监听器
-				@Override
-				public void onItemClick(int pos, char key) { 
-				// 点击事件设计：点击pos号按钮，就得到该按钮的状态并传给board
-					board.getCommandInput(String.valueOf(key));
-					
-				}		
-			});
+        // 调取keyboardAdapter，传入keyList和触控监听器
+        keyboardAdapter = new SpecialKeyboardAdapter(this, keyList, (pos, key) -> {
+        // 点击事件设计：点击pos号按钮，就得到该按钮的状态并传给board
+            board.getCommandInput(String.valueOf(key));
+
+        });
 		keyboardView.setAdapter(keyboardAdapter);
 	
 		// 放置指令的监听器，从Paints接收keyList和pos传给keyboardAdapter
-		board.setOnCommandPlacedListener(new Paints.OnCommandPlacedListener() {
-				@Override
-				public void onCommandPlaced(List<Key> keyList, int pos)
-				{
-					keyboardAdapter.getKeyList(keyList);
-					keyboardAdapter.updateCommandCount(pos);
-				}
-			});
-			
-        stackOutput = findViewById(R.id.screen);
+		board.setOnCommandPlacedListener((keyList, pos) -> {
+            keyboardAdapter.getKeyList(keyList);
+            keyboardAdapter.updateCommandCount(pos);
+        });
+
+		// Interpreter的回调接口
+		interpreter.setCallback(new Interpreter.Callback() {
+			@Override
+			public void onCommandPlaced(List<Key> keyList, int pos) {
+				keyboardAdapter.getKeyList(keyList);
+				keyboardAdapter.updateCommandCount(pos);
+			}
+
+			@Override
+			public void onError(String msg) {
+				Toast.makeText(Funge.this, msg, Toast.LENGTH_SHORT).show();
+			}
+		});
+
+
+		stackOutput = findViewById(R.id.screen);
         IPoutput = findViewById(R.id.ip);
 
 		// execute按钮长/短按
         executeButton = findViewById(R.id.executeButton);
 
-        longPressExecute = new Runnable() {
-            @Override
-            public void run() {
-                isLongPressing = true;
-                execute();
-                handler.post(repeatExecute);
-            }
+        longPressExecute = () -> {
+			isLongPressing = true;
+			execute();
+			handler.post(repeatExecute);
+
         };
 
 		// 运行，供Run按钮使用
@@ -129,32 +124,29 @@ public class Funge extends AppCompatActivity {
 		};
 		
 		// 按Execute键的监听器
-        executeButton.setOnTouchListener(new View.OnTouchListener() {
-				@Override
-				public boolean onTouch(View v, MotionEvent event) {
-					switch (event.getAction()) {
-						case MotionEvent.ACTION_DOWN:
-							isLongPressing = false;
-							handler.postDelayed(longPressExecute, 467); 
-							// 检测长按延时
-							break;
-						case MotionEvent.ACTION_UP:
-						case MotionEvent.ACTION_CANCEL:
-							handler.removeCallbacks(longPressExecute); 
-							if (!isLongPressing) { // 短按执行
-								if (run != null)
-									handler.removeCallbacks(run); 
-								execute();
-							}
-							else { // 长按执行
-								handler.removeCallbacks(repeatExecute);
-								isLongPressing = false;
-							}
-							break;
-					}
-					return true;
-				}
-			});
+        executeButton.setOnTouchListener((v, event) -> {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    isLongPressing = false;
+                    handler.postDelayed(longPressExecute, 467);
+                    // 检测长按延时
+                    break;
+                case MotionEvent.ACTION_UP:
+                case MotionEvent.ACTION_CANCEL:
+                    handler.removeCallbacks(longPressExecute);
+                    if (!isLongPressing) { // 短按执行
+                        if (run != null)
+                            handler.removeCallbacks(run);
+                        execute();
+                    }
+                    else { // 长按执行
+                        handler.removeCallbacks(repeatExecute);
+                        isLongPressing = false;
+                    }
+                    break;
+            }
+            return true;
+        });
     }
 	
 	@Override
@@ -192,6 +184,7 @@ public class Funge extends AppCompatActivity {
 	
 	public void restart(View view) {
 		interpreter.restart();
+		board.invalidate();
 		stackOutput.setText("Restart");
 		isRunning = false;
 		handler.removeCallbacks(repeatExecute);
@@ -200,6 +193,7 @@ public class Funge extends AppCompatActivity {
 
     public void clear(View view) {
         interpreter.clear();
+		board.invalidate();
         stackOutput.setText("Clear");
 		isRunning = false;
 		handler.removeCallbacks(repeatExecute);
