@@ -35,18 +35,31 @@ public class Funge extends AppCompatActivity {
 		// 接受Level传来的关卡数据
 		LevelData currentLevel = (LevelData) getIntent().getSerializableExtra("current_level");
 		keyList = currentLevel.keyList;
-		
+
+		// 传给该页面的Paints
+		board = findViewById(R.id.board);
+		board.setInterpreter(interpreter);
+		interpreter.setLevel(currentLevel);
+
+		interpreter.setCallback(new Interpreter.Callback() {
+			@Override
+			public void onCommandPlaced(List<Key> keyList, int pos) {
+				keyboardAdapter.getKeyList(keyList);
+				keyboardAdapter.updateCommandCount(pos);
+			}
+
+			@Override
+			public void onError(String msg) {
+				Toast.makeText(Funge.this, msg, Toast.LENGTH_SHORT).show();
+			}
+		});
+
 		// 标题栏
 		ActionBar actionBar = getSupportActionBar();
 		if (actionBar != null) {
 			actionBar.setSubtitle(currentLevel.name);
 			actionBar.setTitle(String.valueOf(currentLevel.id));
 		}
-			
-		// 传给该页面的Paints
-		board = findViewById(R.id.board);
-		board.setInterpreter(interpreter);
-		interpreter.setLevel(currentLevel);
 		
 		// 键盘界面
         RecyclerView keyboardView = findViewById(R.id.keys);

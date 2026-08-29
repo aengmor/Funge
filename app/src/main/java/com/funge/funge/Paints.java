@@ -16,7 +16,6 @@ public class Paints extends View { // 负责绘制游戏板的类
 
 	private Interpreter interpreter = new Interpreter();
 	private char command = ' ';
-	private Random random = new Random(); // ?指令
 
 	// 画笔
 	private Paint paint = new Paint(); // 图格画笔
@@ -26,14 +25,9 @@ public class Paints extends View { // 负责绘制游戏板的类
 	private Paint codePaint = new Paint(); // 代码文本
 	private Paint obstaclePaint = new Paint(); // 障碍物文本
 
-//	private Map<XYZ, Character> code = new HashMap<>(); // 代码
-//	private Map<XYZ, Character> obstacle = new HashMap<>(); // 地图障碍
-	private LevelData currentLevel = null; // 当前关卡
 	private List<Key> keyList = new ArrayList<>(); // 按键表，用于修改按键数
 
 	private List<IP> ips = new ArrayList<>(); // 指针列表
-	private IP cip = null; // 当前指针
-	private IP cloneIP = null; // t指令分裂出的ip
 	private int nextuid = 0;
 
 	// 触控辅助

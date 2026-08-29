@@ -13,13 +13,6 @@ import lombok.Setter;
 @Setter
 public class Interpreter{
     public enum Status { RUNNING, CLEAR, FAILED, PAUSED }
-    public interface Callback {
-        static void onCommandPlaced(List<Key> keyList, int pos) {
-
-        }
-
-        void onError(String msg); // 代替 Toast
-    }
 
     private int ROW = 12;
     private int COLUMN = 16;
@@ -37,6 +30,14 @@ public class Interpreter{
     private IP cip = null; // 当前指针
     private IP cloneIP = null; // t指令分裂出的ip
     private int nextuid = 0;
+
+    // 回调
+    public interface Callback {
+        void onCommandPlaced(List<Key> keyList, int pos);
+
+        void onError(String msg); // 代替 Toast
+    }
+    private Callback callback;
 
     // getter&setter
     public void loadIP(int[][] xys) {
@@ -83,7 +84,7 @@ public class Interpreter{
         currentLevel.toKeyList(); // 重置关卡
         restart(); // 重置指针
         keyList = new ArrayList<>(currentLevel.keyList); // 重置键盘
-        Callback.onCommandPlaced(keyList, -1);
+        callback.onCommandPlaced(keyList, -1);
     }
 
     public void restart() {
@@ -129,7 +130,7 @@ public class Interpreter{
 
         // 若有障碍物，不能放置
         if (obstacle.containsKey(xy)) {
-            //Toast.makeText(getContext(), "Cannot place here", Toast.LENGTH_SHORT).show();
+            callback.onError("Cannot place here");
             return;
         }
 
@@ -151,8 +152,7 @@ public class Interpreter{
         }
 
         // 监听器响应变化
-
-            Callback.onCommandPlaced(keyList, pos);
+        callback.onCommandPlaced(keyList, pos);
 
     }
 
@@ -162,7 +162,7 @@ public class Interpreter{
             int old_pos = alter(old_c);
             if (old_pos >= 0) {
                 keyList.get(old_pos).alter(1);
-                Callback.onCommandPlaced(keyList, old_pos);
+                callback.onCommandPlaced(keyList, old_pos);
             }
         }
     }
@@ -188,7 +188,7 @@ public class Interpreter{
         if (old_pos < 0)
             return;
         keyList.get(old_pos).alter(1);
-        Callback.onCommandPlaced(keyList, old_pos);
+        callback.onCommandPlaced(keyList, old_pos);
     }
 
     // 辅助函数，由字符找按键
@@ -230,10 +230,9 @@ public class Interpreter{
             }
         }
         if (flipCount == 1000) {
-//            restart();
-//            Toast.makeText(getContext(), "死循环", Toast.LENGTH_SHORT).show();
+            restart();
+            callback.onError("死循环");
         }
-
     }
 
     public void retreat() {
@@ -268,7 +267,7 @@ public class Interpreter{
             if (c == '"') {
                 cip.stringMode = false;
             } else {
-                push((char) c);
+                push(c);
             }
             return 0;
         }
@@ -453,7 +452,7 @@ public class Interpreter{
                 int yVal = pop();
                 int xVal = pop();
                 char ch = getCommand(xVal, yVal);
-                push((int) ch);
+                push(ch);
             }
             break;
             case 's' : {
@@ -509,7 +508,7 @@ public class Interpreter{
     }
 
     public Status tick() {
-        char c = ' ';
+        char c;
         for (int i = 0; i < ips.size(); i++) {
             cip = ips.get(i);
             if (cip.uid >= 0) {
