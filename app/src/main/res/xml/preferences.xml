@@ -1,0 +1,26 @@
+<PreferenceScreen 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto" >
+
+    <!-- 分类标题 -->
+    <PreferenceCategory android:title="游戏设置">
+        <!--文本输入框 -->
+        <EditTextPreference
+            android:key="run_speed"
+            android:title="执行时间间隔"
+            app:useSimpleSummaryProvider="true"
+            android:defaultValue="49" />
+		<EditTextPreference
+            android:key="grid_size"
+            android:title="网格大小"
+            app:useSimpleSummaryProvider="true"
+            android:defaultValue="100" />
+		<SwitchPreferenceCompat
+            android:key="sgml"
+            android:title="SGML风格空格"
+			app:summary="字符串模式下连续空格视为一个"
+            app:useSimpleSummaryProvider="true"
+            android:defaultValue="100" />
+    </PreferenceCategory>
+
+</PreferenceScreen>

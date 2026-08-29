@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical">
+
+	<TextView
+		android:id="@+id/screen"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="Stack"
+		android:fontFamily="monospace"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:layout_alignParentTop="true"/>
+
+	<ScrollView
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:fillViewport="true"
+		android:layout_below="@id/screen"
+		android:layout_above="@id/runButton"
+		android:id="@+id/scrollView">
+
+		<HorizontalScrollView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content">
+
+			<com.funge.funge.Paints
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:id="@+id/board"/>
+
+		</HorizontalScrollView>
+
+	</ScrollView>
+
+	<Button
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="▶"
+		android:layout_above="@+id/keyboard"
+		style="?android:attr/buttonStyleSmall"
+		android:id="@+id/runButton"
+		android:onClick="run"/>
+
+	<TextView
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="0,0"
+		android:fontFamily="monospace"
+		android:textAppearance="?android:attr/textAppearanceMedium"
+		android:layout_toRightOf="@id/runButton"
+		android:layout_above="@+id/keyboard"
+		android:id="@+id/ip"/>
+
+	<Button
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="╳"
+		android:layout_above="@+id/keyboard"
+		android:layout_alignParentRight="true"
+		android:onClick="clear"
+		android:id="@+id/activityfungrButton1"
+		style="?android:attr/buttonStyleSmall"/>
+
+	<Button
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="⟲"
+		android:layout_above="@+id/keyboard"
+		android:layout_toLeftOf="@id/activityfungrButton1"
+		android:onClick="restart"
+		android:id="@+id/activityfungeButton1"
+		style="?android:attr/buttonStyleSmall"/>
+
+	<LinearLayout
+		android:orientation="horizontal"
+		android:id="@+id/keyboard"
+		android:layout_alignParentBottom="true"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content">
+
+		<androidx.recyclerview.widget.RecyclerView
+			android:id="@+id/keys"
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"/>
+
+	</LinearLayout>
+
+	<Button
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_above="@+id/keyboard"
+		android:text=" "
+		android:layout_toLeftOf="@id/activityfungeButton1"
+		style="?android:attr/buttonStyleSmall"
+		android:onClick="delete"
+		android:id="@+id/activityfungeButton2"/>
+
+	<Button
+		android:layout_width="wrap_content"
+		style="?android:attr/buttonStyleSmall"
+		android:layout_height="wrap_content"
+		android:text="▷"
+		android:layout_toLeftOf="@id/activityfungeButton2"
+		android:layout_above="@id/keyboard"
+		android:id="@+id/executeButton"/>
+
+</RelativeLayout>
+

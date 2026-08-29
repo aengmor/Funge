@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">Funge</string>
+	
+    <string name="cmd_space">无操作</string>
+    <string name="cmd_not">取反</string>
+    <string name="cmd_stringmode">切换字符串模式</string>
+    <string name="cmd_trampoline">跳过下格</string>
+    <string name="cmd_pop">弹出栈顶</string>
+    <string name="cmd_remainder">取余</string>
+    <string name="cmd_input_int">输入整数</string>
+    <string name="cmd_fetch">从下格取字符</string>
+    <string name="cmd_load_fp">加载指纹</string>
+    <string name="cmd_unload_fp">卸载指纹</string>
+    <string name="cmd_mul">乘</string>
+    <string name="cmd_add">加</string>
+    <string name="cmd_output_char">输出字符</string>
+    <string name="cmd_sub">减</string>
+    <string name="cmd_output_int">输出整数</string>
+    <string name="cmd_div">除</string>
+    <!-- 0-9 动态生成，不单独定义 -->
+    <string name="cmd_duplicate">复制栈顶</string>
+    <string name="cmd_skip">跳到下个分号</string>
+    <string name="cmd_west">向左（点击切换）</string>
+    <string name="cmd_execute">执行系统命令</string>
+    <string name="cmd_east">向右</string>
+    <string name="cmd_random">随机方向</string>
+    <string name="cmd_stop">删除指针</string>
+    <!-- A-Z 统一说明 -->
+    <string name="cmd_fingerprint">指纹定义指令</string>
+    <string name="cmd_left_turn">左转</string>
+    <string name="cmd_swap">交换</string>
+    <string name="cmd_right_turn">右转</string>
+    <string name="cmd_north">向上</string>
+    <string name="cmd_if_horiz">条件水平换向</string>
+    <string name="cmd_greater">比较</string>
+    <!-- a-f 动态 -->
+    <string name="cmd_get">从指定坐标取字符</string>
+    <string name="cmd_high">向上（3D）</string>
+    <string name="cmd_input_file">输入文件</string>
+    <string name="cmd_jump">跳越</string>
+    <string name="cmd_iterate">迭代</string>
+    <string name="cmd_low">向下（3D）</string>
+    <string name="cmd_if_vert_3d">高低条件判断（3D）</string>
+    <string name="cmd_clear_stack">清栈</string>
+    <string name="cmd_output_file">输出文件</string>
+    <string name="cmd_put">置指令于指定坐标</string>
+    <string name="cmd_quit">退出</string>
+    <string name="cmd_reflect">反射</string>
+    <string name="cmd_store">置指令于下格</string>
+    <string name="cmd_split">分裂</string>
+    <string name="cmd_stack_under">栈下栈</string>
+    <string name="cmd_south">向下</string>
+    <string name="cmd_compare">比较转向</string>
+    <string name="cmd_abs_delta">绝对方向</string>
+    <string name="cmd_sysinfo">获取系统信息</string>
+    <string name="cmd_noop">无操作</string>
+    <string name="cmd_begin_block">开始块</string>
+    <string name="cmd_if_vert">条件垂直换向</string>
+    <string name="cmd_end_block">结束块</string>
+    <string name="cmd_input_char">输入字符</string>
+    <!-- 通用 -->
+    <string name="cmd_push_number">压入数 %s（点击切换）</string>
+    <string name="cmd_push_hex">压入十六进制数 %s（点击切换）</string>
+    <string name="cmd_unknown">？？？</string>
+	
+	<string name="game_failed">Failed</string>
+	<string name="game_clear">Clear</string>
+</resources>
