@@ -1,12 +1,17 @@
 package com.funge.funge;
 
-import android.content.*;
-import android.graphics.*;
-import android.util.*;
-import android.view.*;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
+import android.graphics.Typeface;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
 
-import androidx.preference.*;
-import java.util.*;
+import androidx.preference.PreferenceManager;
 
 import lombok.Setter;
 
@@ -25,10 +30,6 @@ public class Paints extends View { // 负责绘制游戏板的类
 	private Paint codePaint = new Paint(); // 代码文本
 	private Paint obstaclePaint = new Paint(); // 障碍物文本
 
-	private List<Key> keyList = new ArrayList<>(); // 按键表，用于修改按键数
-
-	private List<IP> ips = new ArrayList<>(); // 指针列表
-
 	// 触控辅助
 	private float downX, downY;
 	private boolean hasMoved = false;
@@ -37,15 +38,6 @@ public class Paints extends View { // 负责绘制游戏板的类
 	public Paints(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		init();
-	}
-
-	// 回调接口，在Funge实现，用于Painter与keyboardAdapter交互以通知它改UI
-	public interface OnCommandPlacedListener {
-		void onCommandPlaced(List<Key> keyList, int pos); // 放置指令时触发
-	}
-	private OnCommandPlacedListener commandPlacedListener;
-	public void setOnCommandPlacedListener(OnCommandPlacedListener listener) {
-		this.commandPlacedListener = listener;
 	}
 
 	// 读取设置

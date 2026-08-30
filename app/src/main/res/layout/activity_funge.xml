@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	xmlns:app="http://schemas.android.com/apk/res-auto"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
 	android:orientation="vertical">
@@ -62,7 +60,7 @@
 		android:layout_above="@+id/keyboard"
 		android:layout_alignParentRight="true"
 		android:onClick="clear"
-		android:id="@+id/activityfungrButton1"
+		android:id="@+id/clearButton"
 		style="?android:attr/buttonStyleSmall"/>
 
 	<Button
@@ -70,9 +68,9 @@
 		android:layout_height="wrap_content"
 		android:text="⟲"
 		android:layout_above="@+id/keyboard"
-		android:layout_toLeftOf="@id/activityfungrButton1"
+		android:id="@+id/restartButton"
 		android:onClick="restart"
-		android:id="@+id/activityfungeButton1"
+		android:layout_toLeftOf="@id/clearButton"
 		style="?android:attr/buttonStyleSmall"/>
 
 	<LinearLayout
@@ -94,19 +92,29 @@
 		android:layout_height="wrap_content"
 		android:layout_above="@+id/keyboard"
 		android:text=" "
-		android:layout_toLeftOf="@id/activityfungeButton1"
+		android:id="@+id/spaceButton"
 		style="?android:attr/buttonStyleSmall"
 		android:onClick="delete"
-		android:id="@+id/activityfungeButton2"/>
+		android:layout_toLeftOf="@id/restartButton"/>
 
 	<Button
 		android:layout_width="wrap_content"
 		style="?android:attr/buttonStyleSmall"
 		android:layout_height="wrap_content"
 		android:text="▷"
-		android:layout_toLeftOf="@id/activityfungeButton2"
+		android:layout_toLeftOf="@id/spaceButton"
 		android:layout_above="@id/keyboard"
 		android:id="@+id/executeButton"/>
+
+	<Button
+		android:id="@+id/undoButton"
+		style="?android:attr/buttonStyleSmall"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_above="@+id/keyboard"
+		android:layout_toLeftOf="@id/executeButton"
+		android:onClick="undo"
+		android:text="↩" />
 
 </RelativeLayout>
 

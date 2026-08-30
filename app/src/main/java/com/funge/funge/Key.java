@@ -1,12 +1,16 @@
 package com.funge.funge;
-import java.util.*;
-import java.io.*;
+
+import java.io.Serializable;
+import java.util.Objects;
+
+import lombok.Setter;
 
 public class Key implements Serializable {
 	private static final long serialVersionUID = 1L;
-	String states = "#";
+	String states = "#"; // 状态列表，
 	int currentState = 0;
-	int amount = 50;
+	@Setter
+    int amount = 50; // 可用数量
 	int stateAmount = 1;
 	
 	public Key() {} // 为了Gson能读取的无参构造函数
@@ -16,8 +20,8 @@ public class Key implements Serializable {
 		this.amount = amount;
 		stateAmount = states.length();
 	}
-	
-	@Override
+
+    @Override
 	public boolean equals(Object o) {
 		if (this == o) return true; // 引用相同
 		if (o == null || getClass() != o.getClass()) return false; // 为null或类型不同
