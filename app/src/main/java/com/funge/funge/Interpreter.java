@@ -34,6 +34,7 @@ public class Interpreter{
     private int cycleCount = 0; // 时间
     private Callback callback;
 
+    // getter & setter
     public String getStack() {
         StringBuilder stackOutput = new StringBuilder();
         if (cip == null)
@@ -45,20 +46,6 @@ public class Interpreter{
             stackOutput.append(num).append("|");
         }
         return stackOutput.toString();
-    }
-
-    public void setLevel(LevelData level) {
-        // 接收Funge传来的关卡数据
-        currentLevel = level;
-
-        // 初始化关卡
-        ROW = currentLevel.w;
-        COLUMN = currentLevel.h;
-        obstacle = stringToCode(currentLevel.map); // 加载障碍物
-        keyList = new ArrayList<>(currentLevel.keyList);
-        keyAmounts = copyKeyAmount();
-
-        loadIP(currentLevel.ip);
     }
 
     private void move(IP cip) {
@@ -96,29 +83,14 @@ public class Interpreter{
         }
     }
 
-    // getter&setter
-    public void loadIP(int[][] xys) {
-        if (xys == null) return;
-        for (int[] xy : xys) {
-            if (xy == null || xy.length < 2) continue; // 跳过无效
-            int x = xy[0];
-            int y = xy[1];
-            // 边界检查
-            if (x < 0 || x >= ROW || y < 0 || y >= COLUMN) {
-                continue;
-            }
-            ips.add(new IP(nextuid++, x, y, 1, 0));
-        }
-    }
-
     // 单步执行
-    public void execute(char c) {
+    public void execute(IP cip, char c) {
         // 字符串模式
         if (cip.stringMode) {
             if (c == '"') {
                 cip.stringMode = false;
             } else {
-                push(c);
+                cip.push(c);
             }
             return;
         }
@@ -135,7 +107,7 @@ public class Interpreter{
             case '7' :
             case '8' :
             case '9' :
-                push(c - '0');
+                cip.push(c - '0');
                 break;
             case 'a' :
             case 'b' :
@@ -143,60 +115,60 @@ public class Interpreter{
             case 'd' :
             case 'e' :
             case 'f' :
-                push(c - 'W');
+                cip.push(c - 'W');
                 break;
 
             // 栈中数运算
             case '+' :
-                push(pop() + pop());
+                cip.push(cip.pop() + cip.pop());
                 break;
             case '-' : {
-                int a = pop();
-                int b = pop();
-                push(b - a);
+                int a = cip.pop();
+                int b = cip.pop();
+                cip.push(b - a);
             }
             break;
             case '*' :
-                push(pop() * pop());
+                cip.push(cip.pop() * cip.pop());
                 break;
             case '/' : {
-                int a = pop();
-                int b = pop();
-                push(a == 0 ? 0 : b / a);
+                int a = cip.pop();
+                int b = cip.pop();
+                cip.push(a == 0 ? 0 : b / a);
             }
             break;
             case '%' : {
-                int a = pop();
-                int b = pop();
-                push(a == 0 ? 0 : b % a);
+                int a = cip.pop();
+                int b = cip.pop();
+                cip.push(a == 0 ? 0 : b % a);
             }
             break;
             case '!' :
-                push(pop() == 0 ? 1 : 0);
+                cip.push(cip.pop() == 0 ? 1 : 0);
                 break;
             case '`' : {
-                int a = pop();
-                int b = pop();
-                push(b > a ? 1 : 0);
+                int a = cip.pop();
+                int b = cip.pop();
+                cip.push(b > a ? 1 : 0);
             }
             break;
 
             // 其他栈操作
             case ':' : {
-                int top = pop();
-                push(top);
-                push(top);
+                int top = cip.pop();
+                cip.push(top);
+                cip.push(top);
             }
             break;
             case '\\' : {
-                int a = pop();
-                int b = pop();
-                push(a);
-                push(b);
+                int a = cip.pop();
+                int b = cip.pop();
+                cip.push(a);
+                cip.push(b);
             }
             break;
             case '$' :
-                pop();
+                cip.pop();
                 break;
             case 'n' :
                 cip.stack.clear();
@@ -231,8 +203,8 @@ public class Interpreter{
                 cip.reflect();
                 break;
             case 'x' : {
-                cip.dy = pop();
-                cip.dx = pop();
+                cip.dy = cip.pop();
+                cip.dx = cip.pop();
                 break;
             }
 
@@ -244,16 +216,16 @@ public class Interpreter{
             }
             break;
             case '_' :
-                cip.dx = (pop() == 0 ? 1 : -1);
+                cip.dx = (cip.pop() == 0 ? 1 : -1);
                 cip.dy = 0;
                 break;
             case '|' :
-                cip.dy = (pop() == 0 ? 1 : -1);
+                cip.dy = (cip.pop() == 0 ? 1 : -1);
                 cip.dx = 0;
                 break;
             case 'w' : {
-                int a = pop();
-                int b = pop();
+                int a = cip.pop();
+                int b = cip.pop();
                 if (a > b)
                     cip.turnRight();
                 else if (b > a)
@@ -266,7 +238,7 @@ public class Interpreter{
                 move(cip);
                 break;
             case 'j' : {
-                int a = pop();
+                int a = cip.pop();
                 if (a > 0)
                     for (int i = 0; i < a; i = i + 1)
                         move(cip);
@@ -282,27 +254,27 @@ public class Interpreter{
                 break;
             case '\'' :
                 move(cip);
-                push(getCommand(cip.x, cip.y));
+                cip.push(getCommand(cip.x, cip.y));
                 break;
             case ' ' :
                 break;
             case 'p' : {
-                int yVal = pop();
-                int xVal = pop();
-                int v = pop();
+                int yVal = cip.pop();
+                int xVal = cip.pop();
+                int v = cip.pop();
                 setObstacle(xVal, yVal, (char) v);
             }
             break;
             case 'g' : {
-                int yVal = pop();
-                int xVal = pop();
+                int yVal = cip.pop();
+                int xVal = cip.pop();
                 char ch = getCommand(xVal, yVal);
-                push(ch);
+                cip.push(ch);
             }
             break;
             case 's' : {
                 move(cip);
-                int v = pop();
+                int v = cip.pop();
                 setObstacle(cip.x, cip.y, (char) v);
                 break;
             }
@@ -313,7 +285,7 @@ public class Interpreter{
             case 'z' :
                 return;
             case 'k' : {
-                int n = pop(); // 执行次数
+                int n = cip.pop(); // 执行次数
                 if (n <= 0) {
                     move(cip);
                     break;
@@ -336,34 +308,34 @@ public class Interpreter{
                 cip.x = tx;
                 cip.y = ty;
                 for (int i = 0; i < n; i++) {
-                    execute(next);
+                    execute(cip, next);
                 }
             }
             break;
             case '"' :
                 cip.stringMode = true;
                 break;
-            //            case '.': System.out.print(pop() + " "); break;
-            //            case ',': System.out.print((char) pop()); break;
+            //            case '.': System.out.print(cip.pop() + " "); break;
+            //            case ',': System.out.print((char) cip.pop()); break;
 
             // 时间旅行
             case 'G': // EX_TRDS+02 获取当前时间
-                push(cycleCount);
+                cip.push(cycleCount);
                 break;
             case 'D': // EX_TRDS+03 设定绝对空间跳跃目标
                 cip.SpMode = 'A';
-                cip.TSpY = pop();
-                cip.TSpX = pop();
+                cip.TSpY = cip.pop();
+                cip.TSpX = cip.pop();
                 break;
             case 'E': // EX_TRDS+05 设定相对空间跳跃目标
                 cip.SpMode = 'R';
-                cip.TSpY = pop();
-                cip.TSpX = pop();
+                cip.TSpY = cip.pop();
+                cip.TSpX = cip.pop();
                 break;
             case 'V': // EX_TRDS+06 设定目标方向向量
                 cip.VMode = 'Y';
-                cip.TvY = pop();
-                cip.TvX = pop();
+                cip.TvY = cip.pop();
+                cip.TvX = cip.pop();
                 break;
             case 'J': // EX_TRDS+04 执行时空跳跃!
                 // 记录返回点
@@ -388,11 +360,11 @@ public class Interpreter{
                 break;
             case 'T': // EX_TRDS+09 设定绝对时间目标
                 cip.TMode = 'A';
-                cip.TTime = pop();
+                cip.TTime = cip.pop();
                 break;
             case 'U': // EX_TRDS+10 设定相对时间目标
                 cip.TMode = 'R';
-                cip.TTime = pop();
+                cip.TTime = cip.pop();
                 break;
             case 'I': // EX_TRDS+11 跳回存档点
                 cip.SpMode = 'A'; cip.VMode = 'Y'; cip.TMode = 'A';
@@ -415,7 +387,7 @@ public class Interpreter{
                 c = getCommand(cip.x, cip.y);
                 if (!cip.stringMode && c == 'z')
                     return Status.FAILED;
-                execute(c);
+                execute(cip, c);
             }
             if (cip.uid < 0) {
                 ips.remove(cip);
@@ -435,15 +407,56 @@ public class Interpreter{
         return Status.RUNNING;
     }
 
-    // Befunge解释器部分
-    // 栈与指针
-    private int pop() {
-        return cip.stack.isEmpty() ? 0 : cip.stack.remove(cip.stack.size() - 1);
+    public void setLevel(LevelData level) {
+        // 接收Funge传来的关卡数据
+        currentLevel = level;
+
+        // 初始化关卡
+        ROW = currentLevel.w;
+        COLUMN = currentLevel.h;
+        obstacle = stringToCode(currentLevel.map); // 加载障碍物
+        keyList = new ArrayList<>(currentLevel.keyList);
+        keyAmounts = copyKeyAmount();
+        loadIP(currentLevel.ip);
     }
 
-    private void push(int val) {
-        cip.stack.add(val);
+    public void loadIP(int[][] xys) {
+        if (xys == null) return;
+        for (int[] xy : xys) {
+            if (xy == null || xy.length < 2) continue; // 跳过无效
+            int x = xy[0];
+            int y = xy[1];
+            // 边界检查
+            if (x < 0 || x >= ROW || y < 0 || y >= COLUMN) {
+                continue;
+            }
+            ips.add(new IP(nextuid++, x, y, 1, 0));
+        }
     }
+
+    // 辅助方法
+    // 深拷贝 IP 列表
+    private List<IP> deepCopyIPs(List<IP> original) {
+        List<IP> copy = new ArrayList<>();
+        for (IP ip : original) {
+            IP newIp = new IP(ip.uid, ip.x, ip.y, ip.dx, ip.dy);
+            newIp.stack = new ArrayDeque<>(ip.stack);
+            newIp.stringMode = ip.stringMode;
+            copy.add(newIp);
+        }
+        return copy;
+    }
+
+    public enum Status { RUNNING, CLEAR, FAILED, PAUSED } // 游戏状态，供解释器处理
+
+    // 回调接口，在Funge实现
+    public interface Callback {
+        void onCommandPlaced(List<Key> keyList, int pos); // 放置、收回指令时键盘响应，与keyboardAdapter交互，通知它改UI
+
+        void onError(String msg); // 代替 Toast 传递消息
+    }
+
+    // Befunge解释器部分
 
     public char getCommand(int xVal, int yVal) { // 取得指令
         return code.getOrDefault(new XYZ(xVal, yVal), obstacle.getOrDefault(new XYZ(xVal, yVal), ' '));
@@ -601,17 +614,12 @@ public class Interpreter{
         this.cycleCount = pastSnap.time;
     }
 
-    // 辅助方法
-    // 深拷贝 IP 列表
-    private List<IP> deepCopyIPs(List<IP> original) {
-        List<IP> copy = new ArrayList<>();
-        for (IP ip : original) {
-            IP newIp = new IP(ip.uid, ip.x, ip.y, ip.dx, ip.dy);
-            newIp.stack = new ArrayList<>(ip.stack);
-            newIp.stringMode = ip.stringMode;
-            copy.add(newIp);
-        }
-        return copy;
+    // 历史快照，用于时间旅行
+    private static class HistorySnapshot {
+        Map<XYZ, Character> codeCopy;
+        List<IP> ipsCopy;
+        int[] keyAmountsCopy;
+        int time;
     }
 
     // 拷贝指令数量
@@ -645,17 +653,6 @@ public class Interpreter{
         }
     }
 
-    // 深拷贝键盘
-//    private List<Key> deepCopyKeys() {
-//        List<Key> keysCopy = new ArrayList<>();
-//        for (Key k : this.keyList) {
-//            Key newKey = new Key(k.states, k.amount);
-//            newKey.currentState = k.currentState;
-//            keysCopy.add(newKey);
-//        }
-//        return keysCopy;
-//    }
-
     public void clear() {
         currentLevel.toKeyList(); // 重置关卡
         ips.clear();
@@ -688,22 +685,5 @@ public class Interpreter{
             }
         }
         return mapMap;
-    }
-
-    public enum Status { RUNNING, CLEAR, FAILED, PAUSED } // 游戏状态，供解释器处理
-
-    // 回调接口，在Funge实现
-    public interface Callback {
-        void onCommandPlaced(List<Key> keyList, int pos); // 放置、收回指令时键盘响应，与keyboardAdapter交互，通知它改UI
-
-        void onError(String msg); // 代替 Toast 传递消息
-    }
-
-    // 历史快照，用于时间旅行
-    private static class HistorySnapshot {
-        Map<XYZ, Character> codeCopy;
-        List<IP> ipsCopy;
-        int[] keyAmountsCopy;
-        int time;
     }
 }

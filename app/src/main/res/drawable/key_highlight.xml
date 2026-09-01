@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- 选中状态（高亮） -->
-    <item android:state_selected="true">
-        <shape>
-            <solid android:color="#E0E0E0" />   <!-- 主题蓝色 -->
-            <corners android:radius="8dp" />
-        </shape>
+    <item android:color="#CCCCCC" android:state_selected="true" >
+
     </item>
     <!-- 默认状态 -->
-    <item>
-        <shape>
-            <solid android:color="#FFFFFF" />   <!-- 浅灰色 -->
-            <corners android:radius="8dp" />
-        </shape>
+    <item android:color="@android:color/transparent">
+
     </item>
 </selector>

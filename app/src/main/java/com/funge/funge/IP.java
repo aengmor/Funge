@@ -1,11 +1,11 @@
 package com.funge.funge;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.ArrayDeque;
+import java.util.Deque;
 
 public class IP { // 指针类
 	int uid, x, y, dx, dy;
-	List<Integer> stack;
+	Deque<Integer> stack;
 	boolean stringMode = false;
 
 	// 时空旅行
@@ -26,7 +26,7 @@ public class IP { // 指针类
 		this.y = y;
 		this.dx = dx;
 		this.dy = dy;
-		stack = new ArrayList<>();
+		stack = new ArrayDeque<>();
 	}
 	
 	public void step() {
@@ -49,5 +49,13 @@ public class IP { // 指针类
 		int tmp = this.dx;
 		this.dx = -this.dy;
 		this.dy = tmp;
+	}
+
+	public int pop() {
+		return stack.isEmpty() ? 0 : stack.pollLast();
+	}
+
+	public void push(int val) {
+		stack.addLast(val);
 	}
 }
