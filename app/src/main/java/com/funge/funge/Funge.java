@@ -28,6 +28,7 @@ public class Funge extends AppCompatActivity {
 	private final Interpreter interpreter = new Interpreter();
     private TextView stackOutput = null; // 栈显示
     private TextView IPoutput = null; // 指针
+	private TextView output = null;
 	// Execute按钮长按
 	private final Handler handler = new Handler(Looper.getMainLooper());
 	private String result = " ^0[r#]?|_w+;j:\\$n\'pgstx@";
@@ -62,6 +63,9 @@ public class Funge extends AppCompatActivity {
 		interpreter.setLevel(currentLevel);
 		board.setInterpreter(interpreter);
 
+		// 输出界面
+		output = findViewById(R.id.outputView);
+
 		// 标题栏
 		ActionBar actionBar = getSupportActionBar();
 		if (actionBar != null && currentLevel != null) {
@@ -93,9 +97,12 @@ public class Funge extends AppCompatActivity {
 			public void onError(String msg) {
 				Toast.makeText(Funge.this, msg, Toast.LENGTH_SHORT).show();
 			}
+
+			@Override
+			public void onOutput(String str) { runOnUiThread(() -> { output.append(str); });}
 		});
 
-		stackOutput = findViewById(R.id.screen);
+		// stackOutput = findViewById(R.id.screen);
         IPoutput = findViewById(R.id.ip);
 
 		// execute按钮长/短按
@@ -231,19 +238,21 @@ public class Funge extends AppCompatActivity {
 	public void restart(View view) {
 		interpreter.restart();
 		board.invalidate();
-		stackOutput.setText("Restart");
+		//stackOutput.setText("Restart");
+		output.setText("");
 		isRunning = false;
 		handler.removeCallbacks(repeatExecute);
-        IPoutput.setText("0,0");
+        IPoutput.setText("");
 	}
 
     public void clear(View view) {
         interpreter.clear();
 		board.invalidate();
-        stackOutput.setText("Clear");
+        //stackOutput.setText("Clear");
+		output.setText("");
 		isRunning = false;
 		handler.removeCallbacks(repeatExecute);
-        IPoutput.setText("0,0");
+        IPoutput.setText("");
     }
 
 	// 执行一步指令，并处理解释器返回的状态
@@ -254,7 +263,7 @@ public class Funge extends AppCompatActivity {
 		if (cip != null) {
 			IPoutput.setText(interpreter.getCycleCount()+ ':' +  cip.uid + ":" + cip.x + "," + cip.y);
 		}
-		stackOutput.setText(interpreter.getStack());
+		//stackOutput.setText(interpreter.getStack());
 		board.invalidate(); // 触发重绘
 
 		// 根据返回状态处理弹窗
@@ -299,9 +308,9 @@ public class Funge extends AppCompatActivity {
 		if (cip != null) {
 			IPoutput.setText(interpreter.getCycleCount()+ ':'+ cip.uid + ":" + cip.x + "," + cip.y);
 		} else {
-			IPoutput.setText("0,0");
+			IPoutput.setText("");
 		}
-		stackOutput.setText(interpreter.getStack());
+		// stackOutput.setText(interpreter.getStack());
 		//Toast.makeText(this, "已撤回一步", Toast.LENGTH_SHORT).show();
 	}
 }

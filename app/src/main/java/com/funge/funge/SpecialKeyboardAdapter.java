@@ -1,11 +1,19 @@
 package com.funge.funge;
 
-import android.view.*;
-import android.widget.*;
-import androidx.annotation.*;
-import androidx.recyclerview.widget.*;
-import java.util.*;
-import android.content.*;
+import android.content.Context;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class SpecialKeyboardAdapter extends RecyclerView.Adapter<SpecialKeyboardAdapter.ViewHolder> {
 	// 指令输入界面适配器，供Funge取用
@@ -44,7 +52,7 @@ public class SpecialKeyboardAdapter extends RecyclerView.Adapter<SpecialKeyboard
 		tooltipMap = new HashMap<>();
 		//tooltipMap.put(' ', context.getString(R.string.cmd_space));
 		tooltipMap.put('!', context.getString(R.string.cmd_not));
-		//tooltipMap.put('"', context.getString(R.string.cmd_stringmode));
+		tooltipMap.put('"', context.getString(R.string.cmd_stringmode));
 		tooltipMap.put('#', context.getString(R.string.cmd_trampoline));
 		tooltipMap.put('$', context.getString(R.string.cmd_pop));
 		tooltipMap.put('%', context.getString(R.string.cmd_remainder));
@@ -54,9 +62,9 @@ public class SpecialKeyboardAdapter extends RecyclerView.Adapter<SpecialKeyboard
 		//tooltipMap.put(')', context.getString(R.string.cmd_unload_fp));
 		tooltipMap.put('*', context.getString(R.string.cmd_mul));
 		tooltipMap.put('+', context.getString(R.string.cmd_add));
-		//tooltipMap.put(',', context.getString(R.string.cmd_output_char));
+		tooltipMap.put(',', context.getString(R.string.cmd_output_char));
 		tooltipMap.put('-', context.getString(R.string.cmd_sub));
-		//tooltipMap.put('.', context.getString(R.string.cmd_output_int));
+		tooltipMap.put('.', context.getString(R.string.cmd_output_int));
 		tooltipMap.put('/', context.getString(R.string.cmd_div));
 		// 数字 0-9
 		for (char c = '0'; c <= '9'; c++) {

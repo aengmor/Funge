@@ -25,16 +25,8 @@ public class Interpreter{
     private Map<XYZ, Character> obstacle = new HashMap<>(); // 地图障碍
     private LevelData currentLevel = null; // 当前关卡
     private List<Key> keyList = new ArrayList<>(); // 按键表，用于修改按键数
-    private Deque<HistorySnapshot> history = new ArrayDeque<>();
 
-    private List<IP> ips = new ArrayList<>(); // 指针列表
-    private IP cip = null; // 当前指针
-    private IP cloneIP = null; // t指令分裂出的ip
-    private int nextuid = 0;
-    private int cycleCount = 0; // 时间
-    private Callback callback;
-
-    // getter & setter
+    /* ------ getter & setter ------ */
     public String getStack() {
         StringBuilder stackOutput = new StringBuilder();
         if (cip == null)
@@ -47,7 +39,133 @@ public class Interpreter{
         }
         return stackOutput.toString();
     }
+    private Deque<HistorySnapshot> history = new ArrayDeque<>();
 
+    private List<IP> ips = new ArrayList<>(); // 指针列表
+    private IP cip = null; // 当前指针
+    private IP cloneIP = null; // t指令分裂出的ip
+    private int nextuid = 0;
+    private int cycleCount = 0; // 时间
+    private Callback callback;
+
+    public void setLevel(LevelData level) {
+        // 接收Funge传来的关卡数据
+        currentLevel = level;
+
+        // 初始化关卡
+        ROW = currentLevel.w;
+        COLUMN = currentLevel.h;
+        obstacle = stringToCode(currentLevel.map); // 加载障碍物
+        keyList = new ArrayList<>(currentLevel.keyList);
+        keyAmounts = copyKeyAmount();
+        setIP(currentLevel.ip);
+    }
+
+    public void setIP(int[][] xys) {
+        if (xys == null) return;
+        for (int[] xy : xys) {
+            if (xy == null || xy.length < 2) continue; // 跳过无效
+            int x = xy[0];
+            int y = xy[1];
+            // 边界检查
+            if (x < 0 || x >= ROW || y < 0 || y >= COLUMN) {
+                continue;
+            }
+            ips.add(new IP(nextuid++, x, y, 1, 0));
+        }
+    }
+
+    // 取得指令
+    public char getCommand(int xVal, int yVal) {
+        return code.getOrDefault(new XYZ(xVal, yVal), obstacle.getOrDefault(new XYZ(xVal, yVal), ' '));
+    }
+
+    // 存入指令
+    public void setCommand(int xVal, int yVal, char c) {
+        // 边界检查
+        if (xVal < 0 || xVal >= ROW || yVal < 0 || yVal >= COLUMN)
+            return;
+
+        XYZ xy = new XYZ(xVal, yVal);
+
+        // 若有障碍物，不能放置
+        if (obstacle.containsKey(xy)) {
+            callback.onError("Cannot place here");
+            return;
+        }
+
+        int pos = -1;
+        Character old_c = code.getOrDefault(new XYZ(xVal, yVal), ' ');
+        if (c == ' ' || old_c == c) {
+            code.put(xy, ' ');
+            recover(old_c);
+        } else {
+            pos = alter(c);
+            if (pos >= 0) {
+                Key key = keyList.get(pos);
+                if (key.amount > 0) {
+                    code.put(xy, c);
+                    key.alter(-1);
+                    recover(old_c);
+                }
+            }
+        }
+
+        // 监听器响应变化
+        callback.onCommandPlaced(keyList, pos);
+    }
+
+    // 收回被替换的指令
+    private void recover(char old_c) {
+        if (old_c != ' ') {
+            int old_pos = alter(old_c);
+            if (old_pos >= 0) {
+                keyList.get(old_pos).alter(1);
+                callback.onCommandPlaced(keyList, old_pos);
+            }
+        }
+    }
+
+    public void setObstacle(int xVal, int yVal, char c) {
+        if (xVal < 0 || xVal >= ROW || yVal < 0 || yVal >= COLUMN)
+            return;
+
+        XYZ xy = new XYZ(xVal, yVal);
+        if (obstacle.containsKey(xy)) {
+            if (c == ' ')
+                obstacle.remove(xy);
+            else
+                obstacle.put(xy, c);
+            return;
+        }
+
+        Character old_c = code.remove(xy);
+        obstacle.put(xy, c);
+        if (old_c == null || old_c == ' ')
+            return;
+        int old_pos = alter(old_c);
+        if (old_pos < 0)
+            return;
+        keyList.get(old_pos).alter(1);
+        callback.onCommandPlaced(keyList, old_pos);
+    }
+
+    // 辅助函数，由字符找按键
+    public int alter(char c) {
+        if (keyList == null) {
+            return -1;
+        }
+        for (int pos = 0; pos < keyList.size(); pos++) {
+            Key key = keyList.get(pos);
+            if (key.in(c)) {
+                return pos;
+            }
+        }
+        return -1;
+    }
+
+    /* ------ Befunge解释器 ------ */
+    // IP移动
     private void move(IP cip) {
         char p = getCommand(cip.x, cip.y);
         int flipCount = 0;
@@ -315,8 +433,17 @@ public class Interpreter{
             case '"' :
                 cip.stringMode = true;
                 break;
-            //            case '.': System.out.print(cip.pop() + " "); break;
-            //            case ',': System.out.print((char) cip.pop()); break;
+
+            // IO
+            case '.': // 输出整数
+                String numStr = Integer.toString(cip.pop()) + " ";
+                if (callback != null) callback.onOutput(numStr);
+                break;
+
+            case ',': // 输出字符
+                char ch = (char) cip.pop();
+                if (callback != null) callback.onOutput(String.valueOf(ch));
+                break;
 
             // 时间旅行
             case 'G': // EX_TRDS+02 获取当前时间
@@ -337,7 +464,7 @@ public class Interpreter{
                 cip.TvY = cip.pop();
                 cip.TvX = cip.pop();
                 break;
-            case 'J': // EX_TRDS+04 执行时空跳跃!
+            case 'J': // EX_TRDS+04 时空跳跃
                 // 记录返回点
                 cip.RTSpX = cip.x; cip.RTSpY = cip.y;
                 cip.RTvX = cip.dx; cip.RTvY = cip.dy;
@@ -378,7 +505,8 @@ public class Interpreter{
         }
     }
 
-    public Status tick() { // 单步执行
+    // 单步执行
+    public Status tick() {
         saveHistory();     // 保存历史快照
         char c;
         for (int i = 0; i < ips.size(); i++) {
@@ -407,32 +535,28 @@ public class Interpreter{
         return Status.RUNNING;
     }
 
-    public void setLevel(LevelData level) {
-        // 接收Funge传来的关卡数据
-        currentLevel = level;
-
-        // 初始化关卡
-        ROW = currentLevel.w;
-        COLUMN = currentLevel.h;
-        obstacle = stringToCode(currentLevel.map); // 加载障碍物
-        keyList = new ArrayList<>(currentLevel.keyList);
-        keyAmounts = copyKeyAmount();
-        loadIP(currentLevel.ip);
+    public void clear() {
+        currentLevel.toKeyList(); // 重置关卡
+        ips.clear();
+        setIP(currentLevel.ip); // 重置指针
+        code = new HashMap<>(); // 清除指令
+        setKeyAmount(keyAmounts); // 重置按键数
+        cycleCount = 0;
     }
 
-    public void loadIP(int[][] xys) {
-        if (xys == null) return;
-        for (int[] xy : xys) {
-            if (xy == null || xy.length < 2) continue; // 跳过无效
-            int x = xy[0];
-            int y = xy[1];
-            // 边界检查
-            if (x < 0 || x >= ROW || y < 0 || y >= COLUMN) {
-                continue;
+    public void restart() {
+        ips.clear();
+        setIP(currentLevel.ip); // 重置指针
+        obstacle = new HashMap<>(stringToCode(currentLevel.map)); // 重置障碍物
+        List<XYZ> placedKeys = new ArrayList<>(this.code.keySet());
+        for (XYZ xyz : placedKeys) { // 回收被障碍物占据的指令
+            if (obstacle.containsKey(xyz)) {
+                recover(code.remove(xyz));
             }
-            ips.add(new IP(nextuid++, x, y, 1, 0));
         }
     }
+
+    public enum Status { RUNNING, CLEAR, FAILED, PAUSED } // 游戏状态，供解释器处理
 
     // 辅助方法
     // 深拷贝 IP 列表
@@ -447,103 +571,11 @@ public class Interpreter{
         return copy;
     }
 
-    public enum Status { RUNNING, CLEAR, FAILED, PAUSED } // 游戏状态，供解释器处理
 
-    // 回调接口，在Funge实现
-    public interface Callback {
-        void onCommandPlaced(List<Key> keyList, int pos); // 放置、收回指令时键盘响应，与keyboardAdapter交互，通知它改UI
-
-        void onError(String msg); // 代替 Toast 传递消息
-    }
 
     // Befunge解释器部分
 
-    public char getCommand(int xVal, int yVal) { // 取得指令
-        return code.getOrDefault(new XYZ(xVal, yVal), obstacle.getOrDefault(new XYZ(xVal, yVal), ' '));
-    }
 
-    public void setCommand(int xVal, int yVal, char c) { // 存入指令
-        // 边界检查
-        if (xVal < 0 || xVal >= ROW || yVal < 0 || yVal >= COLUMN)
-            return;
-
-        XYZ xy = new XYZ(xVal, yVal);
-
-        // 若有障碍物，不能放置
-        if (obstacle.containsKey(xy)) {
-            callback.onError("Cannot place here");
-            return;
-        }
-
-        int pos = -1;
-        Character old_c = code.getOrDefault(new XYZ(xVal, yVal), ' ');
-        if (c == ' ' || old_c == c) {
-            code.put(xy, ' ');
-            recover(old_c);
-        } else {
-            pos = alter(c);
-            if (pos >= 0) {
-                Key key = keyList.get(pos);
-                if (key.amount > 0) {
-                    code.put(xy, c);
-                    key.alter(-1);
-                    recover(old_c);
-                }
-            }
-        }
-
-        // 监听器响应变化
-        callback.onCommandPlaced(keyList, pos);
-    }
-
-    // 收回被替换的指令
-    private void recover(char old_c) {
-        if (old_c != ' ') {
-            int old_pos = alter(old_c);
-            if (old_pos >= 0) {
-                keyList.get(old_pos).alter(1);
-                callback.onCommandPlaced(keyList, old_pos);
-            }
-        }
-    }
-
-    public void setObstacle(int xVal, int yVal, char c) {
-        if (xVal < 0 || xVal >= ROW || yVal < 0 || yVal >= COLUMN)
-            return;
-
-        XYZ xy = new XYZ(xVal, yVal);
-        if (obstacle.containsKey(xy)) {
-            if (c == ' ')
-                obstacle.remove(xy);
-            else
-                obstacle.put(xy, c);
-            return;
-        }
-
-        Character old_c = code.remove(xy);
-        obstacle.put(xy, c);
-        if (old_c == null || old_c == ' ')
-            return;
-        int old_pos = alter(old_c);
-        if (old_pos < 0)
-            return;
-        keyList.get(old_pos).alter(1);
-        callback.onCommandPlaced(keyList, old_pos);
-    }
-
-    // 辅助函数，由字符找按键
-    public int alter(char c) {
-        if (keyList == null) {
-            return -1;
-        }
-        for (int pos = 0; pos < keyList.size(); pos++) {
-            Key key = keyList.get(pos);
-            if (key.in(c)) {
-                return pos;
-            }
-        }
-        return -1;
-    }
 
     // 时间旅行函数
     // 每一 tick 结束时保存快照
@@ -614,14 +646,6 @@ public class Interpreter{
         this.cycleCount = pastSnap.time;
     }
 
-    // 历史快照，用于时间旅行
-    private static class HistorySnapshot {
-        Map<XYZ, Character> codeCopy;
-        List<IP> ipsCopy;
-        int[] keyAmountsCopy;
-        int time;
-    }
-
     // 拷贝指令数量
     private int[] copyKeyAmount() {
         int[] amountsCopy = new int[keyList.size()];
@@ -653,25 +677,19 @@ public class Interpreter{
         }
     }
 
-    public void clear() {
-        currentLevel.toKeyList(); // 重置关卡
-        ips.clear();
-        loadIP(currentLevel.ip); // 重置指针
-        code = new HashMap<>(); // 清除指令
-        setKeyAmount(keyAmounts); // 重置按键数
-        cycleCount = 0;
+    // 回调接口，在Funge实现
+    public interface Callback {
+        void onCommandPlaced(List<Key> keyList, int pos); // 放置、收回指令时键盘响应，与keyboardAdapter交互，通知它改UI
+        void onError(String msg); // 代替 Toast 传递消息
+        void onOutput(String str); // 输出
     }
 
-    public void restart() {
-        ips.clear();
-        loadIP(currentLevel.ip); // 重置指针
-        obstacle = new HashMap<>(stringToCode(currentLevel.map)); // 重置障碍物
-        List<XYZ> placedKeys = new ArrayList<>(this.code.keySet());
-        for (XYZ xyz : placedKeys) { // 回收被障碍物占据的指令
-            if (obstacle.containsKey(xyz)) {
-                recover(code.remove(xyz));
-            }
-        }
+    // 历史快照，用于时间旅行
+    private static class HistorySnapshot {
+        Map<XYZ, Character> codeCopy;
+        List<IP> ipsCopy;
+        int[] keyAmountsCopy;
+        int time;
     }
 
     public Map<XYZ, Character> stringToCode(String[] codeString) {

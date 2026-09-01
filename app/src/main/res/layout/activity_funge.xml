@@ -5,10 +5,9 @@
 	android:orientation="vertical">
 
 	<TextView
-		android:id="@+id/screen"
+		android:id="@+id/outputView"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:text="Stack"
 		android:fontFamily="monospace"
 		android:textAppearance="?android:attr/textAppearanceMedium"
 		android:layout_alignParentTop="true"/>
@@ -17,7 +16,7 @@
 		android:layout_width="match_parent"
 		android:layout_height="match_parent"
 		android:fillViewport="true"
-		android:layout_below="@id/screen"
+		android:layout_below="@id/outputView"
 		android:layout_above="@id/runButton"
 		android:id="@+id/scrollView">
 
@@ -46,7 +45,7 @@
 	<TextView
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:text="0,0"
+		android:text=""
 		android:fontFamily="monospace"
 		android:textAppearance="?android:attr/textAppearanceMedium"
 		android:layout_toRightOf="@id/runButton"
